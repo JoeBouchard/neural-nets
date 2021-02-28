@@ -143,10 +143,14 @@ def predict(line, autoencoder, tokenizer='test_model.model'):
 def train(ae, data, testData):
     print(data.shape)
 
-    ae.fit(data,data, epochs=300, shuffle=True, verbose=2,
-           #batch_size=1, 
-           validation_data=(testData, testData))
-
+    #Allow keyboard interrupt during training
+    try:
+        ae.fit(data,data, epochs=300, shuffle=True, verbose=2,
+               #batch_size=1, 
+               validation_data=(testData, testData))
+    except KeyboardInterrupt:
+        print("Skipping the rest of the training")
+        
     return ae
 
 #Make data

@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+physical_devices = tf.config.list_physical_devices('GPU') 
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
 import random
 import math
 
@@ -38,7 +40,7 @@ class myAutoencoder(Model):
             #Output layer
             layers.Dense(visible_dim, activation='linear'),
             #Put back into 28x28
-            layers.Reshape((28,28))
+            #layers.Reshape((28,28))
             ])
         self.compile(optimizer=tf.keras.optimizers.Adam(lr=0.1),
                      loss=tf.keras.losses.MeanSquaredError())
@@ -135,4 +137,4 @@ def lookatclothes():
       #ax.get_yaxis().set_visible(False)
     plt.show()
 
-lookatclothes()
+#lookatclothes()

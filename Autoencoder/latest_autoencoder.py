@@ -40,10 +40,21 @@ class myAutoencoder(Model):
             #Put back into 28x28
             layers.Reshape((28,28))
             ])
+        self.compile(optimizer=tf.keras.optimizers.Adam(lr=0.1),
+                     loss=tf.keras.losses.MeanSquaredError())
     def call(self, x):
         endoced = self.encoder(x)
         decoded = self.decoder(endoced)
         return decoded
+    def eval(self, data):
+        data2 = self.call(data)
+        mse = tf.keras.losses.MeanSquaredError()
+        return mse(data2,data)
+        
+    def train(self, data, epochs=1):
+        self.fit(data,data, epochs=epochs, shuffle=True,
+                 verbose=2, validation_data=(data,data))
+        
 
 #Sequential Autoencoder model for NLPCA
 class sequentialAutoencoder():
@@ -57,8 +68,6 @@ class sequentialAutoencoder():
             self.coders.append(myAutoencoder(visible_dim=visible_dim, latent_dim=1,
                                              mapping_layers=ml,
                                              activation=activation))
-            self.coders[i].compile(optimizer=tf.keras.optimizers.Adam(lr=0.1),
-                                   loss=losses.MeanSquaredError())
 
     def train(self, data, epochs=1):
         for ac in self.coders:
@@ -66,7 +75,7 @@ class sequentialAutoencoder():
                    validation_data=(data,data))
             data_prime = ac.call(data)
             data = data - data_prime
-            #print(data)
+            
     def call(self, data):
         final_data = data - data #so it's all zeroes
         for ac in self.coders:
@@ -75,6 +84,11 @@ class sequentialAutoencoder():
             data = data - data_prime
         return final_data
 
+    def eval(self, data):
+        data2 = self.call(data)
+        mse = tf.keras.losses.MeanSquaredError()
+        return mse(data2, data)
+
 def lookatclothes():
     (x_train, _), (x_test, _) = fashion_mnist.load_data()
     x_train = x_train.astype('float32') / 255.
@@ -82,16 +96,24 @@ def lookatclothes():
     print (x_train.shape)
     print(type(x_train))
     print (x_test.shape)
-    sqa = sequentialAutoencoder(visible_dim=784, latent_dim=8, mapping_layers=100)
-    sqa.train(x_train, epochs=2)
+    sqa = sequentialAutoencoder(visible_dim=784, latent_dim=2, mapping_layers=50)
+    na = myAutoencoder(visible_dim=784, latent_dim=2, mapping_layers=50)
+    sqa.train(x_train, epochs=10)
 
+    na.train(x_train, epochs=10)
+    print("SQA")
+    print(sqa.eval(x_train))
+    print("NA")
+    print(na.eval(x_train))
+
+    nrecoded = na.call(x_test).numpy()
     recoded = sqa.call(x_test).numpy()
     n = 10
-    plt.figure(figsize=(20, 4))
+    plt.figure(figsize=(30, 4))
     for i in range(n):
       # display original
       ax = plt.subplot(2, n, i + 1)
-      plt.imshow(x_test[i])
+      plt.imshow(recoded[i])
       plt.title("original")
       plt.gray()
       ax.get_xaxis().set_visible(False)
@@ -99,11 +121,18 @@ def lookatclothes():
     
       # display reconstruction
       ax = plt.subplot(2, n, i + 1 + n)
-      plt.imshow(recoded[i])
+      plt.imshow(nrecoded[i])
       plt.title("reconstructed")
       plt.gray()
       ax.get_xaxis().set_visible(False)
       ax.get_yaxis().set_visible(False)
+      # display reconstruction-sqanormal
+      #ax = plt.subplot(2, n, i + 1 + n )
+      #plt.imshow(recoded[i])
+      #plt.title("reconstructed-sqa")
+      #plt.gray()
+      #ax.get_xaxis().set_visible(False)
+      #ax.get_yaxis().set_visible(False)
     plt.show()
 
 lookatclothes()

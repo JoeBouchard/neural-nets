@@ -19,6 +19,11 @@ from sklearn.metrics import r2_score
 #Classic Sparse Autoencoder model for NLPCA
 class myAutoencoder(Model):
     def __init__(self, visible_dim=2, latent_dim=1, mapping_layers=6, activation='sigmoid'):
+        #Reset all seeds to 0 to remove randomness in initial generation
+        tf.random.set_seed(0)
+        random.seed(0)
+        np.random.seed(0)
+        
         super(myAutoencoder, self).__init__()
         self.latent_dim = latent_dim
         self.visible_dim=visible_dim

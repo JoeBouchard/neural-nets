@@ -4,12 +4,12 @@ import random
 import math
 import time
 import csv
-
+random.seed(0)
 print("hello")
 
 
 #Data set based on 2 variables, mostly a
-def makedata1(amount=500):
+def makedata1(amount=100):
     data = []
     for i in range(amount):
         a = random.random()
@@ -26,7 +26,7 @@ def makedata1(amount=500):
     return data
 
 #Data set based on 2 variables, evenly distributed
-def makedata2(amount=500):
+def makedata2(amount=100):
     data = []
     for i in range(amount):
         a = random.random()
@@ -55,19 +55,17 @@ def test(data, vdata, tdata, latent_dim=2, mapping_layers=4, epochs=1):
 
     sqr = (sqa.eval(tdata).numpy())
     acr = ((ac.eval(tdata)).numpy())
-    #print("Sequential: " + str(sqr))
-    #print("Parallel: " + str(acr))
     return sqr, acr
 
- 
-#sqr, acr = test(makedata1(), makedata1(), makedata1(), epochs=30)
-#sqr2, acr2 = test(makedata2(), makedata2(), makedata2(), epochs=30)
 x = makedata1()
-sqr, acr = test(x, x, x, epochs=30)
+sqr, acr = test(x,x,x,epochs=10)
+#sqr, acr = test(makedata1(), makedata1(), makedata1(), epochs=10)
+#sqr2, acr2 = test(makedata2(), makedata2(), makedata2(), epochs=10)
+
 print("Sequential: " + str(sqr))
 print("Parallel: " + str(acr))
-print("Sequential: " + str(sqr2))
-print("Parallel: " + str(acr2))
+#print("Sequential: " + str(sqr2))
+#print("Parallel: " + str(acr2))
 
 
 #list the mse for each set of epochs
@@ -83,7 +81,7 @@ def mse_list(data,vdata,tdata,model=la.myAutoencoder,
         ac.train(data=data, vdata=vdata, epochs=epochs)
     return mse
 
-print(mse_list(makedata1(), makedata1(), makedata1()))
+
 
 #Turn horizontal lists into average and stdeviation
 def getmean(lists):
@@ -97,7 +95,7 @@ def getmean(lists):
 
 
 #Make a csv file with mean and stdev for both models
-def makecsv(dataset, num_coders, count=10):
+def makecsv(dataset, num_coders, count=2):
     data = dataset()
     vdata = dataset()
     tdata = dataset()
@@ -107,18 +105,22 @@ def makecsv(dataset, num_coders, count=10):
         ac_lists.append(mse_list(data,vdata,tdata,
                                  model=la.myAutoencoder,
                                  latent_dim=2, mapping_layers=4,
-                                 epochs=1, count=count))
+                                 epochs=10, count=count))
         sq_lists.append(mse_list(data,vdata,tdata,
                                  model=la.sequentialAutoencoder,
                                  latent_dim=2, mapping_layers=4,
-                                 epochs=1, count=count))
+                                 epochs=10, count=count))
     
     with open(time.strftime(str(dataset).split()[1]+'results%H%M.csv'), mode='w') as file1:
         writer1 = csv.writer(file1, delimiter=',', quotechar='"',
                              lineterminator= '\n', quoting=csv.QUOTE_MINIMAL)
            
         acm, acs = getmean(ac_lists)
+        acm.insert(0,"Standard mean")
+        acs.insert(0, "Standard stdev")
         sqm, sqs = getmean(sq_lists)
+        sqm.insert(0, "Seq mean")
+        sqs.insert(0, "Seq stdev")
         writer1.writerow(acm)
         writer1.writerow(acs)
         writer1.writerow(sqm)

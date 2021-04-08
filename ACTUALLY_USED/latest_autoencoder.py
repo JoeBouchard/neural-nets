@@ -54,8 +54,8 @@ class myAutoencoder(Model):
         return mse(data2,data)
         
     def train(self, data, vdata, epochs=1):
-        self.fit(data, vdata, epochs=epochs, shuffle=True,
-                 verbose=2, validation_data=(data,data))
+        self.fit(data, data, epochs=epochs, shuffle=True,
+                 verbose=2, validation_data=(vdata,vdata))
         
 
 #Sequential Autoencoder model for NLPCA
@@ -73,8 +73,8 @@ class sequentialAutoencoder():
 
     def train(self, data, vdata, epochs=1):
         for ac in self.coders:
-            ac.fit(data, vdata, epochs=epochs, shuffle=True, verbose=2,
-                   validation_data=(data,data))
+            ac.fit(data, data, epochs=epochs, shuffle=True, verbose=2,
+                   validation_data=(vdata,vdata))
             data_prime = ac.call(data)
             data = data - data_prime
             

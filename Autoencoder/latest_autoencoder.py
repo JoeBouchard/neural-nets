@@ -20,9 +20,9 @@ from sklearn.metrics import r2_score
 class myAutoencoder(Model):
     def __init__(self, visible_dim=2, latent_dim=1, mapping_layers=6, activation='sigmoid'):
         #Reset all seeds to 0 to remove randomness in initial generation
-        tf.random.set_seed(0)
-        random.seed(0)
-        np.random.seed(0)
+        #tf.random.set_seed(0)
+        #random.seed(0)
+        #np.random.seed(0)
         
         super(myAutoencoder, self).__init__()
         self.latent_dim = latent_dim
@@ -58,9 +58,9 @@ class myAutoencoder(Model):
         mse = tf.keras.losses.MeanSquaredError()
         return mse(data2,data)
         
-    def train(self, data, epochs=1):
+    def train(self, data, vdata, epochs=1):
         self.fit(data,data, epochs=epochs, shuffle=True,
-                 verbose=2, validation_data=(data,data))
+                 verbose=2, validation_data=(vdata,vdata))
         
 
 #Sequential Autoencoder model for NLPCA
@@ -76,12 +76,14 @@ class sequentialAutoencoder():
                                              mapping_layers=ml,
                                              activation=activation))
 
-    def train(self, data, epochs=1):
+    def train(self, data, vdata, epochs=1):
         for ac in self.coders:
             ac.fit(data, data, epochs=epochs, shuffle=True, verbose=2,
-                   validation_data=(data,data))
+                   validation_data=(vdata,vdata))
             data_prime = ac.call(data)
+            vdata_prime = ac.call(vdata)
             data = data - data_prime
+            vdata = vdata - vdata_prime
             
     def call(self, data):
         final_data = data - data #so it's all zeroes

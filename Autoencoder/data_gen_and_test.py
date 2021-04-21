@@ -68,6 +68,80 @@ def test(data, vdata, tdata, latent_dim=2, mapping_layers=4, epochs=1):
 #print("Sequential2: " + str(sqr2))
 #print("Parallel2: " + str(acr2))
 
+#Make a table
+def testable(count=1, nlim=6):
+    #do tests for
+    epochs = [1,5,10,20,50,100,250,500]
+    ml = [4,8,12]
+
+    with open("latable.txt","w+") as f:
+        f.write("\\begin{table}[hbt!] \r\n")
+        f.write("\caption{\label{tab:table1} Data Set 1 Mean Squared Error} \r\n")
+        f.write("\centering \r\n")
+        f.write("\\begin{tabular}{|c|c|c|c|c|c|c|} \r\n")
+        f.write("\hline \r\n")
+        f.write(" \\textbf{Epochs} & \\textbf{SA-4} & \\textbf{SQ-4}" +
+                " & \\textbf{SA-8} & \\textbf{SQ-8} & \\textbf{SA-12} & \\textbf{SQ-12} \\\\")
+        f.write("\hline \r\n")
+        #Data here
+        for e in epochs:
+            f.write(str(e))
+            for m in ml:
+                sar = []
+                sqr = []
+                for t in range(count):
+                    x = test(makedata1(), makedata1(), makedata1(),
+                             mapping_layers=m, epochs=e)
+                    sqr.append(x[0])
+                    sar.append(x[1])
+                #Get mean and stdev
+                sa = (str(la.np.mean(sar))[:nlim] + " $\pm$ "
+                      + str(la.np.std(sar))[:nlim] )
+                sq = (str(la.np.mean(sqr))[:nlim] + " $\pm$ "
+                      + str(la.np.std(sqr))[:nlim] )
+                f.write(" & " + sa + " & " + sq)
+            f.write("\\\\ \hline \r\n")
+
+                    
+        f.write("\end{tabular} \r\n")
+        f.write("\end{table} ")
+#TABLE 2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        f.write("\\begin{table}[hbt!] \r\n")
+        f.write("\caption{\label{tab:table1} Data Set 2 Mean Squared Error} \r\n")
+        f.write("\centering \r\n")
+        f.write("\\begin{tabular}{|c|c|c|c|c|c|c|} \r\n")
+        f.write("\hline \r\n")
+        f.write(" \\textbf{Epochs} & \\textbf{SA-4} & \\textbf{SQ-4}" +
+                " & \\textbf{SA-8} & \\textbf{SQ-8} & \\textbf{SA-12} & \\textbf{SQ-12} \\\\")
+        f.write("\hline \r\n")
+        #Data here
+        for e in epochs:
+            f.write(str(e))
+            for m in ml:
+                sar = []
+                sqr = []
+                for t in range(count):
+                    x = test(makedata2(), makedata2(), makedata2(),
+                             mapping_layers=m, epochs=e)
+                    sqr.append(x[0])
+                    sar.append(x[1])
+                #Get mean and stdev
+                sa = (str(la.np.mean(sar))[:nlim] + " $\pm$ "
+                      + str(la.np.std(sar))[:nlim] )
+                sq = (str(la.np.mean(sqr))[:nlim] + " $\pm$ "
+                      + str(la.np.std(sqr))[:nlim] )
+                f.write(" & " + sa + " & " + sq)
+            f.write("\\\\ \hline \r\n")
+
+                    
+        f.write("\end{tabular} \r\n")
+        f.write("\end{table} ")
+
+
+
+
+#testable(count=100)
+
 #list the mse for each set of epochs
 def mse_list(data,vdata,tdata,model=la.myAutoencoder,
              latent_dim=2, mapping_layers=4, epochs=1, count=10):
@@ -133,12 +207,50 @@ def makecsv(dataset, num_coders, epochs=1, ml=4, count=2):
                           ((count-1)*epochs), ml,
                           (5*ml*2+2*ml*2), (5*ml*2*2+1*ml*2*2)])
         
+
+#Function to see how well we interpret data
+def interpret(dataset, model=la.sequentialAutoencoder, ml=8, epochs=1, count=20):
+    tr = dataset(amount=500)
+    vd = dataset()
+    ts = dataset()
+    x = tr.shape[1]
+    ac = model(visible_dim=x, latent_dim=2, mapping_layers=ml)
+    print(str(model).split(".")[1][:6])
+    with open(time.strftime(str(dataset).split()[1]+"_ml"+str(ml) +
+                            "_"+ str(model).split(".")[1][:6] +
+                            "_interpretable_results%H%M.csv"),mode='w')as file1:
+        writer1 = csv.writer(file1, delimiter=',', quotechar='"',
+                             lineterminator='\n', quoting=csv.QUOTE_MINIMAL)
+        if dataset == makedata1:
+            writer1.writerow(["a", "b", "a+a", "1/(a+1)", "1-a"])
+        elif dataset == makedata2:
+            writer1.writerow(["a", "b", "a+b", "a*b","(1/(1+a)) + (1/(1+b))"])
+        for c in range(count):
+            ac.train(tr, vd, epochs=epochs, trainonlyone=1)
+            writer1.writerow(ac.elemental_error(ts)[0])
+        if (str(model).split(".")[1][:6] == "myAuto"):
+            return
+        writer1.writerow("")
+        writer1.writerow(["a", "b", "a+a", "1/(a+1)", "1-a"])
+        for c in range(count):
+            ac.train(tr, vd, epochs=epochs, trainonlyone=2)
+            writer1.writerow(ac.elemental_error(ts)[1])
+    
+
+interpret(makedata2, model=la.myAutoencoder)
+interpret(makedata2, model=la.sequentialAutoencoder)
+
+
+    
+
+
 #print(mse_list(makedata1(), makedata1(), makedata1(), epochs=1, count=11))
 #print("seq")
 #print(mse_list(makedata1(), makedata1(), makedata1(), model=la.sequentialAutoencoder, epochs=1,count=11))
-makecsv(makedata1, 100,ml=12, epochs=10, count=51)
-makecsv(makedata2, 100,ml=12, epochs=10, count=51)
-makecsv(makedata1, 100,ml=12, epochs=5, count=101)
-makecsv(makedata2, 100,ml=12, epochs=5, count=101)
-makecsv(makedata1, 100,ml=12, epochs=1, count=501)
-makecsv(makedata2, 100,ml=12, epochs=1, count=501)
+#makecsv(makedata1, 100,ml=12, epochs=10, count=51)
+#makecsv(makedata2, 100,ml=12, epochs=10, count=51)
+#makecsv(makedata1, 100,ml=12, epochs=5, count=101)
+#makecsv(makedata2, 100,ml=12, epochs=5, count=101)
+#makecsv(makedata1, 100,ml=12, epochs=1, count=501)
+#makecsv(makedata2, 100,ml=12, epochs=1, count=501)
+print("DONE!")

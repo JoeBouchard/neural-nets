@@ -58,9 +58,20 @@ class myAutoencoder(Model):
         mse = tf.keras.losses.MeanSquaredError()
         return mse(data2,data)
         
-    def train(self, data, vdata, epochs=1):
+    def train(self, data, vdata, epochs=1, trainonlyone=0):
         self.fit(data,data, epochs=epochs, shuffle=True,
                  verbose=2, validation_data=(vdata,vdata))
+    def elemental_error(self, data):
+        sse = []
+        data_prime = self.call(data)
+        rem = data - data_prime
+        remsum = []
+        for i in range(data.shape[1]):
+            remsum.append(0)
+            for d in rem:   
+                remsum[i] = remsum[i] + d.numpy()[i]**2
+        sse.append(remsum)
+        return sse  
         
 
 #Sequential Autoencoder model for NLPCA
@@ -76,14 +87,17 @@ class sequentialAutoencoder():
                                              mapping_layers=ml,
                                              activation=activation))
 
-    def train(self, data, vdata, epochs=1):
+    def train(self, data, vdata, epochs=1, trainonlyone=0):
+        count = 1
         for ac in self.coders:
-            ac.fit(data, data, epochs=epochs, shuffle=True, verbose=2,
-                   validation_data=(vdata,vdata))
+            if trainonlyone == 0 or trainonlyone ==count:
+                ac.fit(data, data, epochs=epochs, shuffle=True, verbose=2,
+                       validation_data=(vdata,vdata))
             data_prime = ac.call(data)
             vdata_prime = ac.call(vdata)
             data = data - data_prime
             vdata = vdata - vdata_prime
+            count = count + 1
             
     def call(self, data):
         final_data = data - data #so it's all zeroes
@@ -97,6 +111,34 @@ class sequentialAutoencoder():
         data2 = self.call(data)
         mse = tf.keras.losses.MeanSquaredError()
         return mse(data2, data)
+
+    def encode(self, data):
+        final_data = data - data
+        t = []
+        remnants = []
+        for ac in self.coders:
+            endoced = ac.encoder(data)
+            t.append(endoced)
+            data_prime = ac.decoder(endoced)
+            finaldata = final_data + data_prime
+            data = data - data_prime
+            remnants.append(data)
+        return t, remnants
+    #Function to get the sum-squared-error for each data element
+    def elemental_error(self, data):
+        sse = []
+        for ac in self.coders:
+            data_prime = ac.call(data)
+            rem = data - data_prime
+            data = rem
+            remsum = []
+            for i in range(data.shape[1]):
+                remsum.append(0)
+                for d in rem:   
+                    remsum[i] = remsum[i] + d.numpy()[i]**2
+            sse.append(remsum)
+        return sse
+        
 
 def lookatclothes():
     (x_train, _), (x_test, _) = fashion_mnist.load_data()

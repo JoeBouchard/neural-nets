@@ -187,3 +187,6 @@ def lookatclothes():
     plt.show()
 
 #lookatclothes()
+x = myAutoencoder(visible_dim = 5, latent_dim=1, mapping_layers=4)
+x.build((100,5))
+print(x.summary())

@@ -1,5 +1,7 @@
 Notes on the code used for the CS 5073 Project:
 
+All code files are in the Autoencoder directory. The testingdata, trainingdata, and Happiness_data.csv files and folders are for future work.
+
 The file "latest_autoencoder" includes a class for the standard autoencoder
 and a class for the sequential autoencoder. It also includes a function to 
 test one of each on the MNIST clothing dataset; to run that function one

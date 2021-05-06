@@ -61,6 +61,7 @@ class myAutoencoder(Model):
     def train(self, data, vdata, epochs=1, trainonlyone=0):
         self.fit(data,data, epochs=epochs, shuffle=True,
                  verbose=2, validation_data=(vdata,vdata))
+    #Return the sum-squared-error for each data element
     def elemental_error(self, data):
         sse = []
         data_prime = self.call(data)
@@ -86,7 +87,8 @@ class sequentialAutoencoder():
             self.coders.append(myAutoencoder(visible_dim=visible_dim, latent_dim=1,
                                              mapping_layers=ml,
                                              activation=activation))
-
+    #Trains each sub-autoencoder, or if trainonlyone > 0
+    # then train only the "trainonlyone"-th autoencoder
     def train(self, data, vdata, epochs=1, trainonlyone=0):
         count = 1
         for ac in self.coders:
@@ -124,6 +126,7 @@ class sequentialAutoencoder():
             data = data - data_prime
             remnants.append(data)
         return t, remnants
+    
     #Function to get the sum-squared-error for each data element
     def elemental_error(self, data):
         sse = []
@@ -139,7 +142,7 @@ class sequentialAutoencoder():
             sse.append(remsum)
         return sse
         
-
+#This function tests functionality of both autoencoders on MNIST clothing images
 def lookatclothes():
     (x_train, _), (x_test, _) = fashion_mnist.load_data()
     x_train = x_train.astype('float32') / 255.
@@ -187,6 +190,8 @@ def lookatclothes():
     plt.show()
 
 #lookatclothes()
+
+#This code lets us know the number of parameters in this autoencoder
 x = myAutoencoder(visible_dim = 5, latent_dim=1, mapping_layers=4)
 x.build((100,5))
 print(x.summary())

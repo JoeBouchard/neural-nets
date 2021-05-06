@@ -41,6 +41,8 @@ def makedata2(amount=100):
     print(data.shape)
     return data
 
+#Function to evaluate a sequential autoencoder and a standard autoencoder
+# on the same data, returning MSE of each.
 def test(data, vdata, tdata, latent_dim=2, mapping_layers=4, epochs=1):
     visible_dim = data.shape[1]
     ac = la.myAutoencoder(visible_dim=visible_dim,
@@ -62,13 +64,16 @@ def test(data, vdata, tdata, latent_dim=2, mapping_layers=4, epochs=1):
  
 #sqr, acr = test(makedata1(), makedata1(), makedata1(), epochs=10)
 #sqr2, acr2 = test(makedata2(), makedata2(), makedata2(), epochs=10)
-
 #print("Sequential: " + str(sqr))
 #print("Parallel: " + str(acr))
 #print("Sequential2: " + str(sqr2))
 #print("Parallel2: " + str(acr2))
 
-#Make a table
+
+#Compare performance of 100 sequential autoencoders and 100 standard autoencoders
+# run for a variety of numbers of epochs with a variety of mapping layer sizes
+# This function creates a text file to be used in LATEX as a 2 tables: 1 for each
+# data set.
 def testable(count=1, nlim=6):
     #do tests for
     epochs = [1,5,10,20,50,100,250,500]
@@ -105,7 +110,7 @@ def testable(count=1, nlim=6):
                     
         f.write("\end{tabular} \r\n")
         f.write("\end{table} ")
-#TABLE 2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#TABLE 2 for data set 2
         f.write("\\begin{table}[hbt!] \r\n")
         f.write("\caption{\label{tab:table1} Data Set 2 Mean Squared Error} \r\n")
         f.write("\centering \r\n")
@@ -137,12 +142,9 @@ def testable(count=1, nlim=6):
         f.write("\end{tabular} \r\n")
         f.write("\end{table} ")
 
-
-
-
 #testable(count=100)
 
-#list the mse for each set of epochs
+#Train a model on a data set, recording the MSE at each set of epochs
 def mse_list(data,vdata,tdata,model=la.myAutoencoder,
              latent_dim=2, mapping_layers=4, epochs=1, count=10):
     visible_dim = data.shape[1]
@@ -209,6 +211,7 @@ def makecsv(dataset, num_coders, epochs=1, ml=4, count=2):
         
 
 #Function to see how well we interpret data
+# Makes a csv file of error for each element.
 def interpret(dataset, model=la.sequentialAutoencoder, ml=8, epochs=1, count=20):
     tr = dataset(amount=500)
     vd = dataset()
